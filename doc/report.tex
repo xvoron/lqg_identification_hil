@@ -1,0 +1,68 @@
+\documentclass[11pt]{article}
+
+\usepackage{sectsty}
+\usepackage{graphicx}
+\graphicspath{{img/}{../img/}}
+\usepackage{listings}
+\lstset{language=Matlab}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{import}
+\usepackage{subfiles}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+\usepackage[square, numbers]{natbib}
+\bibliographystyle{unsrtnat}
+\usepackage[nottoc]{tocbibind}
+
+%\usepackage{biblatex}
+%\addbibresource{citations.bib} %usage \cite{test}
+% Margins
+% 
+\topmargin=-0.45in
+\evensidemargin=0in
+\oddsidemargin=0in
+\textwidth=6.5in
+\textheight=9.0in
+\headsep=0.25in
+
+\title{RPO project report}
+\author{Artyom Voronin} 
+\date{\today}
+
+\begin{document}
+\maketitle	
+
+% Optional TOC
+\tableofcontents
+\pagebreak
+
+% --------------------------------------------------------------------------
+% SECTION 1 
+% --------------------------------------------------------------------------
+\subfile{sections/section1.tex}
+\pagebreak    
+% --------------------------------------------------------------------------
+% SECTION 2 
+% --------------------------------------------------------------------------
+\subfile{sections/section2.tex}
+\pagebreak    
+
+% --------------------------------------------------------------------------
+% SECTION 3 
+% --------------------------------------------------------------------------
+\subfile{sections/section3.tex}
+\pagebreak    
+
+% --------------------------------------------------------------------------
+% SECTION 4 
+% --------------------------------------------------------------------------
+\subfile{sections/section4.tex}
+\pagebreak    
+
+
+
+\bibliography{citations}
+
+\end{document}
