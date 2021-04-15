@@ -5,6 +5,9 @@ clc
 clear all
 close all
 
+Fs = 1e2;
+Ts = 1/Fs;
+
 %% Aircraft longitudinal dynamic 
 A = [-0.3149 235.8928 0;
      -0.0034 -0.4282 0;
@@ -20,6 +23,38 @@ inputs = {'delta_e'};
 outputs = {'theta'};
 
 sys_ss = ss(A,B,C,D,'statename',states,'inputname',inputs,'outputname',outputs);
+sys_disc = c2d(sys_ss, Ts);
+
+%% Simulate discrete system:
+time = 0:Ts:10;
+i = 1;
+x_disc = zeros(3, length(time));
+x_cont = zeros(3, length(time));
+
+u = zeros(1, length(time));
+y_disc = zeros(1, length(time));
+y_cont = zeros(1, length(time));
+
+x_disc(:,1) = [1;10;1];
+x_cont(:,1) = [1;10;1];
+
+for t=time
+    x_disc(:,i+1) = sys_disc.A*x_disc(:,i) + sys_disc.B*u(i);
+    y_disc(i) = sys_disc.C*x_disc(:,i);
+    x_cont(:,i+1) = sys_ss.A*x_cont(:,i) + sys_ss.B*u(i);
+    y_cont(i) = sys_ss.C*x_cont(:,i);
+    i = i + 1;
+end
+
+figure
+hold on
+plot(time, y_cont')
+plot(time, y_disc')
+legend("Continues", "Discrete")
+xlabel("Time (sec)")
+ylabel("Pitch angle theta (rad)")
+title("Discrete/Continues system simulation using for cycle x0 = [1;10;1]")
+hold off
 
 %% Open loop dynamic 
 % System dynamic
@@ -30,12 +65,13 @@ observ= rank(obsv(A, C));
 fprintf("Pols: %d\n", pols)
 fprintf("Controlability %d\n",  control)
 fprintf("Observability %d\n",  observ)
+fprintf("System is controllable and observable \n")
 
 %% Open-Loop Impulse response
-%  respone simulation
 
 t = 0:0.1:20;
 
+figure
 [y,t] = impulse(sys_ss, t);
 plot(t,y)
 title('Open-Loop Impulse Response')
@@ -144,8 +180,8 @@ plot(t,y);
 [x_true,t] = lsim(sys_full_output,u_aug,t);
 hold on
 plot(t, x_true(:,3), 'k', 'LineWidth' ,2.0)
-[x,t] = lsim(sys_kf, [u; y'],t);
-plot(t,x(:,3),'r--', 'LineWidth', 2.0)
+[x_disc,t] = lsim(sys_kf, [u; y'],t);
+plot(t,x_disc(:,3),'r--', 'LineWidth', 2.0)
 title('LQG with noise')
 xlabel('Time (sec)')
 ylabel('Pitch angle theta (rad)')
@@ -153,8 +189,11 @@ legend('y','real theta', 'estimated theta')
 hold off
 
 figure
-plot(t,x_true(:,2),'-', t, x(:,2), '--', 'LineWidth', 2)
+plot(t,x_true(:,2),'-', t, x_disc(:,2), '--', 'LineWidth', 2)
 title('Real and estimated pitch rate q')
 xlabel('Time (sec)')
 ylabel('Pitch rate q (rad/s)')
 legend('real q', 'estimated q')
+
+
+
