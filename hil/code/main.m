@@ -3,6 +3,7 @@
 clc
 clear all
 close all
+
 %% Parameters
 U = 48;     %[V] Voltage
 freq = 20;  %[Hz] Freq
@@ -20,10 +21,9 @@ M = 171;    %Encoder
 U_I_max = 4;   %[V] LEM max Voltage 
 phi_max = 10;   %[rad] Phi max angle 
 
-data = load('dataOneWheel.mat'); %Data from accelerometer
 
-dataX = data.Acceleration.X;
-dataY = data.Acceleration.Y;
-dataZ = data.Acceleration.Z;
-t = 0:0.1:11.1;
-t = t';
+I = 1;
+l = 1;
+B = 0.1;
+m = 1;
+g = 9.81;
