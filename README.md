@@ -5,7 +5,8 @@ Project contain:
 3. HIL
 
 # TODO
-* [ ] Hil:
-	* [ ] Graybox
-	* [ ] Blackbox
+* [ ] Identification:
+    * [ ] Measure new data more representative
+	* [.] Graybox
+	* [.] Blackbox
 
