@@ -135,6 +135,21 @@ xlabel('Time (sec)')
 ylabel('Pitch angle theta (rad)')
 
 
+%% Limit input in system, saturation
+
+f = @(u, u_min, u_max) min(max(u, u_min), u_max); 
+u_min = -10;
+u_max = 10;
+
+r = u;
+r(100:end) = 1;
+for t=time
+    u_actuator = r(i)*N - K*x_disc(:,i);
+    x_disc(:,i+1) = sys_disc.A*x_disc(:,i) + sys_disc.B*f(u_actuator,u_min,u_max);
+    y_disc(i) = sys_disc.C*x_disc(:,i);
+    i = i + 1;
+end
+
 %% System with noise
 
 Vd = .01*eye(3); 
