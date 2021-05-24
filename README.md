@@ -5,8 +5,15 @@ Project contain:
 3. HIL
 
 # TODO
-* [ ] Identification:
-    * [ ] Measure new data more representative
-	* [.] Graybox
-	* [.] Blackbox
+* [X] Review 
+* [ ] LQG:
+    * [ ] Kalman
+* [o] Identification:
+    * [X] Measure new data more representative
+    * [X] 3.1 pulse -> impulse
+	* [ ] Graybox
+	* [ ] Blackbox
+* [ ] HIL:
+    * [ ] acc ?
+    * [ ] 
 

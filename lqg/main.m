@@ -1,9 +1,17 @@
-%% Main file LQG
-% Artyom Voronin
-% Brno, 2021
+%% 
+%    _     ___   ____ 
+%   | |   / _ \ / ___|
+%   | |  | | | | |  _ 
+%   | |__| |_| | |_| |
+%   |_____\__\_\\____|
+%                     
+%   Artyom Voronin
+%   Brno, 2021
+
 clc
 clear all
 close all
+path2fig = "../doc/img/";
 
 Fs = 1e2;
 Ts = 1/Fs;
@@ -25,39 +33,34 @@ outputs = {'theta'};
 sys_ss = ss(A,B,C,D,'statename',states,'inputname',inputs,'outputname',outputs);
 sys_disc = c2d(sys_ss, Ts);
 
-%% Simulate discrete system:
-time = 0:Ts:10;
+%% Simulate discrete system with non zero initial conditions
+time = 0:Ts:20;
 i = 1;
-x_disc = zeros(3, length(time));
-x_cont = zeros(3, length(time));
 
+x_disc = zeros(3, length(time));
 u = zeros(1, length(time));
 y_disc = zeros(1, length(time));
-y_cont = zeros(1, length(time));
-
-x_disc(:,1) = [0;0;0];
-x_cont(:,1) = [0;0;0];
+x_disc(:,1) = [0;1;0];
 
 for t=time
     x_disc(:,i+1) = sys_disc.A*x_disc(:,i) + sys_disc.B*u(i);
     y_disc(i) = sys_disc.C*x_disc(:,i);
-    x_cont(:,i+1) = sys_ss.A*x_cont(:,i) + sys_ss.B*u(i);
-    y_cont(i) = sys_ss.C*x_cont(:,i);
     i = i + 1;
 end
 
-figure
+
+f = figure;  
+f.Position = [10 10 1000 300]; 
 hold on
-plot(time, y_cont')
-plot(time, y_disc')
-legend("Continues", "Discrete")
+plot(time, y_disc', 'LineWidth', 3)
+grid on
 xlabel("Time (sec)")
 ylabel("Pitch angle theta (rad)")
-title("Discrete/Continues system simulation using for cycle x0 = [1;10;1]")
+title("System response with non-zero initial conditions x0 = [0;1;0]")
 hold off
+%%saveas(f, path2fig+"non_zero.png")
 
-%% Open loop dynamic 
-% System dynamic
+%% Open loop system dynamic 
 
 pols = eig(A);
 control = rank(ctrb(A, B));
@@ -68,29 +71,32 @@ fprintf("Observability %d\n",  observ)
 fprintf("System is controllable and observable \n")
 
 %% Open-Loop Impulse response
-
 t = 0:0.1:20;
 
-figure
+f = figure;
+f.Position = [100 100 1000 500]; 
+subplot(2,1,1)
 [y,t] = impulse(sys_ss, t);
-plot(t,y)
+plot(t,y, 'LineWidth', 3)
 title('Open-Loop Impulse Response')
 xlabel('Time (sec)')
 ylabel('Pitch angle theta (rad)')
 
-%% Open-Loop Step response
-figure
+% Open-Loop Step response
+subplot(2,1,2)
 [y,t] = step(sys_ss,t);
 
-plot(t,y)
+plot(t,y, 'LineWidth', 3)
 title('Open-Loop Step Response')
 xlabel('Time (sec)')
 ylabel('Pitch angle theta (rad)')
 
+%%saveas(f, path2fig+"open_loop.png")
 
 
 %% Close-loop impulse Response different Q and R matrix
-figure
+f = figure;  
+f.Position = [10 10 1000 300]; 
 for i=1:50:501  
     Q_ = diag([0, 0, i]);
     R_ = .1;
@@ -98,12 +104,13 @@ for i=1:50:501
     N = rscale(A,B,C,D,K);
     sys_cl = ss(A-B*K,B*N,C,D,'statename',states,'inputname',inputs,'outputname',outputs);
     [y,t] = impulse(sys_cl,t);
-    plot(t,y)
+    plot(t,y, 'LineWidth', 3)
     title('Close-Loop Impulse Response for different Q matrices')
     xlabel('Time (sec)')
     ylabel('Pitch angle theta (rad)')
     hold on
 end
+%saveas(f, path2fig+"lqr_diff_Q.png")
 %% LQR implementation
 % Close loop
 
@@ -119,33 +126,67 @@ Cc = C;
 Dc = D;
 
 sys_cl = ss(Ac,Bc,Cc,Dc,'statename',states,'inputname',inputs,'outputname',outputs);
+%% Close-loop zero control
+sys_disc_cl = c2d(sys_cl, Ts);
+time = 0:Ts:20;
+i = 1;
+
+x_disc_cl = zeros(3, length(time));
+u = zeros(1, length(time));
+y_disc_cl = zeros(1, length(time));
+x_disc_cl(:,1) = [0;0;1];
+
+for t=time
+    x_disc_cl(:,i+1) = sys_disc_cl.A*x_disc_cl(:,i) + sys_disc_cl.B*u(i);
+    y_disc_cl(i) = sys_disc_cl.C*x_disc_cl(:,i);
+    i = i + 1;
+end
+
+
+f = figure;  
+f.Position = [10 10 1000 300]; 
+hold on
+plot(time, y_disc_cl', 'LineWidth', 3)
+grid on
+xlabel("Time (sec)")
+ylabel("Pitch angle theta (rad)")
+title("Close loop system control to zero with non-zero initial conditions x0 = [0;0;1]")
+hold off
+%saveas(f, path2fig+"control2zero.png")
+
 %% Close-loop impulse Response
-figure
+f = figure;
+f.Position = [100 100 1000 500]; 
+subplot(2,1,1)
 [y,t] = impulse(sys_cl,t);
-plot(t,y)
+plot(t,y, 'LineWidth', 3)
 title('Close-Loop Impuls Response')
 xlabel('Time (sec)')
 ylabel('Pitch angle theta (rad)')
-%% Close-Loop Step Response
-figure
+% Close-Loop Step Response
+subplot(2,1,2)
 [y,t] = step(sys_cl,t);
-plot(t,y)
+plot(t,y, 'LineWidth',3)
 title('Close-Loop Step Response')
 xlabel('Time (sec)')
 ylabel('Pitch angle theta (rad)')
 
+%saveas(f, path2fig+"close_loop.png")
 
 %% Limit input in system, saturation
-
 f = @(u, u_min, u_max) min(max(u, u_min), u_max); 
+time = 0:Ts:60;
+x_disc = zeros(3, length(time));
+u = zeros(1, length(time));
+y_disc = zeros(1, length(time));
 
-u_min = -10;
-u_max = 10;
-
+u_min = -1.5;
+u_max = 1.5;
 r = u;
-r(100:end) = 1;
+r(1/Ts:end) = 1;
 u_actuator = zeros(1, length(time));
 i = 1;
+x_disc(:,1) = [0;0;0];
 for t=time
     u_actuator(i) = f((r(i)*N - K*x_disc(:,i)), u_min, u_max);
     x_disc(:,i+1) = sys_disc.A*x_disc(:,i) + sys_disc.B*u_actuator(i);
@@ -153,81 +194,127 @@ for t=time
     i = i + 1;
 end
 
-figure
-plot(time, u_actuator)
-title("Actuator")
+fig = figure;
+fig.Position = [100 100 1000 500]; 
+subplot(2,1,1)
+plot(time, u_actuator, 'LineWidth', 3)
+xlabel("Time (sec)")
+ylabel("Actuating value (rad)")
+title("Actuator with [-1.5;1.5] saturation on input")
 
-figure
-plot(time, y_disc)
+subplot(2,1,2)
+plot(time, y_disc, 'LineWidth', 3)
+xlabel("Time (sec)")
+ylabel("Theta (rad)")
 title("Output with saturated actuator")
+%saveas(fig, path2fig+"lqr_saturation.png")
 
-figure
+%% Limit input in system, saturation
+% different saturation values example
+calculate_diff_saturation = 0;
+if calculate_diff_saturation
+    f = @(u, u_min, u_max) min(max(u, u_min), u_max); 
+    fig = figure;
+    fig.Position = [100 100 1000 500]; 
+    u = zeros(1, length(time));
+    r = u;
+    r(100:end) = 1;
+    for k = 0.5:0.2:1.5
+        u_min = -k;
+        u_max = k;
+
+        u_actuator = zeros(1, length(time));
+        x_disc(:,1) = [0;0;0];
+        i = 1;
+        for t=time
+            u_actuator(i) = f((r(i)*N - K*x_disc(:,i)), u_min, u_max);
+            x_disc(:,i+1) = sys_disc.A*x_disc(:,i) + sys_disc.B*u_actuator(i);
+            y_disc(i) = sys_disc.C*x_disc(:,i);
+            i = i + 1;
+        end
+        hold on
+        subplot(2,1,1)
+        plot(time, u_actuator, 'LineWidth', 3)
+        xlabel("Time (sec)")
+        ylabel("Actuating value elevator deflection (rad)")
+        title("Actuator with different saturation values")
+        hold on
+        subplot(2,1,2)
+        plot(time, y_disc, 'LineWidth', 3)
+        xlabel("Time (sec)")
+        ylabel("Theta (rad)")
+        title("Theta for different saturation values")
+    end
+    hold off
+    %%saveas(fig, path2fig+"lqr_saturation_diff.png")
+end
+
+%% Kalman Filter implementation
+Sw = .01;
+Sv = .5;
+
+[kalmf, Kf, P] = kalman(sys_ss, Sw, Sv); 
+
+f = @(u, u_min, u_max) min(max(u, u_min), u_max); 
+time = 0:Ts:60;
+x_disc = zeros(3, length(time));
+u = zeros(1, length(time));
+y_disc = zeros(1, length(time));
+y_disc_kf = zeros(1, length(time));
+
+a = -Sv;
+b = Sv;
+
+
+u_min = -1.5;
+u_max = 1.5;
+r = u;
+r(1/Ts:end) = 1;
+u_actuator = zeros(1, length(time));
+i = 1;
+x_disc(:,1) = [0;0;0];
+x_disc_kf(:,1) = [0;0;0];
+
+for t=time
+    u_actuator(i) = f((r(i)*N - K*x_disc_kf(:,i)), u_min, u_max);
+    x_disc(:,i+1) = sys_disc.A*x_disc(:,i) + sys_disc.B*u_actuator(i);
+    y_disc(i) = sys_disc.C*x_disc(:,i) + a+(b-a)*rand;
+    x_disc_kf(:,i+1) = sys_disc.A*x_disc_kf(:,i) + sys_disc.B*u_actuator(i) + Kf*(y_disc(i) - sys_disc.C*x_disc_kf(:, i));
+    y_disc_kf(i) = sys_disc.C*x_disc_kf(:,i);
+    i = i + 1;
+end
+%%
+
+fig = figure;
+fig.Position = [100 100 1000 600]; 
+subplot(3,1,1)
 hold on
-plot(time,x_disc(1,1:end-1))
-plot(time,x_disc(2,1:end-1))
-plot(time,x_disc(3,1:end-1))
-hold off
-legend("x1", "x2", "x3")
-title("states")
-%% System with noise
-
-Vd = .01*eye(3); 
-Vn = 1;
-Bf = [B Vd 0*B];
-sys_noise = ss(A,Bf,C,[0 0 0 0 Vn]);
-sys_full_output = ss(A,Bf,eye(3),zeros(3,size(Bf,2)));
-
-%% Kalman filter
-Sw = 1;
-Sv = .1;
-
-Kf = (lqr(A',C',Vd,Vn))';
-% [kalmf, Kf, P] = kalman(sys_ss, Sw, Sv); %another solution
-Akf = A-Kf*C;
-Bkf = [B Kf];
-Ckf = eye(3);
-Dkf = 0*[B Kf];
-sys_kf = ss(Akf, Bkf, Ckf, Dkf);
-
-
-dt = 0.01;
-t = 0:dt:50;
-
-%
-% Prepaire input with noise
-%
-
-u_dist = randn(3,size(t,2));
-u_noise = randn(size(t));
-u = 0*t;
-u(100:200) = 100;
-u(1500:1600) = -100;
-u_aug = [u; 0.1*eye(3)*u_dist; 1*u_noise];
-
-%
-% Simulate and plot
-%
-
-figure
-[y,t] = lsim(sys_noise,u_aug,t);
-plot(t,y);
-[x_true,t] = lsim(sys_full_output,u_aug,t);
-hold on
-plot(t, x_true(:,3), 'k', 'LineWidth' ,2.0)
-[x_disc,t] = lsim(sys_kf, [u; y'],t);
-plot(t,x_disc(:,3),'r--', 'LineWidth', 2.0)
-title('LQG with noise')
+plot(time,y_disc','r', 'LineWidth', 1.0)
+plot(time, x_disc(3,1:end-1), 'b','LineWidth', 3)
+plot(time, x_disc_kf(3,1:end-1), 'g', 'LineWidth',3)
+title('Measured and estimated pitch angle')
 xlabel('Time (sec)')
 ylabel('Pitch angle theta (rad)')
-legend('y','real theta', 'estimated theta')
+legend('measured','true', 'estimated')
 hold off
-
-figure
-plot(t,x_true(:,2),'-', t, x_disc(:,2), '--', 'LineWidth', 2)
-title('Real and estimated pitch rate q')
+subplot(3,1,2)
+hold on
+plot(time, x_disc(2,1:end-1), 'b','LineWidth', 3)
+plot(time, x_disc_kf(2,1:end-1), 'g', 'LineWidth',3)
+title('True and estimated pitch rate q by Kalman filter')
 xlabel('Time (sec)')
 ylabel('Pitch rate q (rad/s)')
-legend('real q', 'estimated q')
+legend('true', 'estimated')
+hold off
 
+subplot(3,1,3)
+hold on
+plot(time, x_disc(1,1:end-1), 'b','LineWidth', 3)
+plot(time, x_disc_kf(1,1:end-1), 'g', 'LineWidth',3)
+title('True and estimated vertical velocity omega by Kalman filter')
+xlabel('Time (sec)')
+ylabel('Vertical velocity  omega (rad/s)')
+legend('true', 'estimated')
+hold off
 
-
+%%saveas(fig, path2fig+"lqg_saturated_noise.png")

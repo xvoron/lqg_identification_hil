@@ -1,40 +1,45 @@
-\documentclass[../report.tex]{subfiles}
-
-\begin{document}
-% --------------------------------------------------------------------------
-% SECTION 2 
-% --------------------------------------------------------------------------
-\section{State space control (LQG) of stable aircraft}
-\subsection{Creation and description of the model}
+\chapter{State-space Control (LQG) of Stable Aircraft}
+\section{Model Overview}
+Figure \ref{fig:aircraft} represent a general aircraft longitudinal motion.
+The dynamic model of the aircraft system \ref{fig:aircraft} is taken from
+the article \cite{air_lqg}.
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.6\textwidth]{aircraft.png}
-    \caption{Aircraft longitudinal motion.}
+    \caption{Aircraft longitudinal motion}
     \label{fig:aircraft}
 \end{figure}
 
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|c|c|}
+        \hline
+        $\beta$     & rad         & Sideslip angle \\
+        $p$         & rad/s       & Roll rate\\
+        $r$         & rad/s       & Yaw rate\\
+        $\Phi$      & rad         & Roll angle\\
+        $w$         & m/s         & Vertical velocity\\
+        $q$         & rad/s       & Pitch rate\\
+        $\theta$    & rad         & Pitch angle\\
+        $\delta_e$  & rad         & Elevator deflection\\
+        \hline
+    \end{tabular}
+    \caption{System parameters}
+    \label{tab:params}
+\end{table}
+
 \begin{tabular}{ |c|c| }
     \hline
-    $\beta$ & Sideslip angle \\
-    $p$ & Roll rate\\
-    $r$ & Yaw rate\\
-    $\Phi$ & Roll angle\\
-    $w$ & Vertical velocity\\
-    $q$ & Pitch rate\\
-    $\theta$ & Pitch angle\\
-    $\delta_e$ & Elevator deflection\\
     \hline
 \end{tabular}
 
-TODO: More about the system model. \\
-
-The dynamic model of the aircraft system \ref{fig:aircraft} is taken from
-the article \cite{air_lqg}.
 For longitudinal motion:
 \begin{equation}
     \beta = p = r =\Phi = 0
 \end{equation}
+
 The transfer function is represented in state-space form by matrices:
 \begin{align} \label{sys_ss}
     \begin{split}
@@ -62,7 +67,6 @@ $x^T = \begin{bmatrix} w & q & \theta \end{bmatrix}$ \\
 
 $u = \delta_e$
 
-
 The implemented Model in Simulink is presented in the following 
 diagram \ref{fig:plant}.
 
@@ -78,9 +82,20 @@ In the Matlab system can be represented by the state space function:
 >>sys = ss(A,B,C,D)
 \end{lstlisting}
 
+Figure \ref{fig:non_zero} represents the system behavior with non zero initial
+conditions, where the pitch rate $q_0 = 1 \rm [rad/s]$.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\textwidth]{non_zero.png}
+    \caption{System response with non zero initial conditions}
+    \label{fig:non_zero}
+\end{figure}
 
 
-\subsection{Open loop response}
+
+
+\section{Open-loop Response}
 The system is stable only if all the real parts of the eigenvalues are
 negative. \\
 The dynamics of the model is determined by the following parameters:\\
@@ -99,33 +114,20 @@ If the rank of Observability matrix $O = [ C\ CA\ CA^2\ \dots\ CA^{n-1} ]$
 is equal to $n$, the system is \textbf{observable}.
 
 The whole system is described by \ref{sys_ss} equations.
-Open-loop impulse response is presented on figure
-\ref{fig:open_loop_impuls}. The result corresponds to our expectations.
+Open-loop impulse and step responses are presented in the figure
+\ref{fig:open_loop}. The result corresponds to our expectations.
 
-Open-loop step response is presented on figure
-\ref{fig:open_loop_step}. The result corresponds to our expectations.
-Aircraft started to increase pitch angle.
-
-\begin{figure}[hbt!]
+\begin{figure}[h!]
     \centering
-    \begin{minipage}{.5\textwidth}
-    \centering
-    \includegraphics[width=1\textwidth]{open_loop_impuls.png}
-    \caption{Open-loop impulse response.}
-    \label{fig:open_loop_impuls}
-\end{minipage}%
-\begin{minipage}{.5\textwidth}
-    \centering
-    \includegraphics[width=1\textwidth]{open_loop_step.png}
-    \caption{Open-loop step response.}
-    \label{fig:open_loop_step}
-\end{minipage}
+    \includegraphics[width=1\textwidth]{open_loop.png}
+    \caption{Open-loop system response}
+    \label{fig:open_loop}
 \end{figure}
 
 
 \pagebreak
 
-\subsection{LQR design - zero control}
+\section{LQR Design - zero control}
 In modeling zero control response, the input of the system
 will be $u = -Kx$, ($r=0$). Substituting into equation \ref{sys_ss}, the
 result of Close-loop system will correspond to equation \ref{sys_cl}.
@@ -151,7 +153,7 @@ R = .1;
 K = lqr(A,B,Q,R);
 \end{lstlisting}
 
-Simulink model of Close-loop system is presented in the following diagram
+Simulink model of close-loop system is presented in the following diagram
 \ref{fig:zero_control}.
 
 \begin{figure}[h]
@@ -161,7 +163,18 @@ Simulink model of Close-loop system is presented in the following diagram
     \label{fig:zero_control}
 \end{figure}
 
-\subsection{LQR design - control to the point - rscale}
+Figure \ref{fig:zero_control} represent the system behavior controlled by
+LQR controller with non-zero initial conditions.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\textwidth]{control2zero.png}
+    \caption{Zero control with non-zero initial conditions}
+    \label{fig:zero_control}
+\end{figure}
+
+
+\section{LQR Design - control to the point - rscale}
 
 $N$ gain is used to scalar our input for a full-state feedback system to 
 eliminate the steady-state error.
@@ -175,14 +188,14 @@ result of Close-loop system controlled to $r$ will correspond to equation
     \dot{x} = (A-BK)x + BNr
 \end{equation}
 
-For calculation \textbf{N} gain in matlab were used rscale function from
+For calculation \textbf{N} gain in Matlab were used \textit{rscale} function from
 \cite{rscale}. 
 \begin{lstlisting}[frame=single]
 N = rscale(A,B,C,D,K);
 \end{lstlisting}
 
-Simulink model of Close-loop system controled to point is presented in the following diagram
-\ref{fig:model_to_point}.
+Simulink model of Close-loop system controlled to point is presented in the
+following diagram \ref{fig:model_to_point}.
 
 \begin{figure}[hbt!]
     \centering
@@ -190,33 +203,26 @@ Simulink model of Close-loop system controled to point is presented in the follo
     \caption{Rscale control to point model in Simulink.}
     \label{fig:model_to_point}
 \end{figure}
+
 In the Matlab system can be represented by the state space function:
 \begin{lstlisting}[frame=single]
 >>sys = ss(A-B*K,B*N,C,D)
 \end{lstlisting}
 
 The Close-loop impulse and step response are presented in the following
-figure \ref{fig:close_loop_impuls}, \ref{fig:close_loop_step}.
+figure \ref{fig:close_loop}.
 
-\begin{figure}[hbt!]
+\begin{figure}[h!]
     \centering
-    \begin{minipage}{.5\textwidth}
-    \centering
-    \includegraphics[width=1\textwidth]{close_loop_impuls.png}
-    \caption{Close-loop impulse response.}
-    \label{fig:close_loop_impuls}
-\end{minipage}%
-\begin{minipage}{.5\textwidth}
-    \centering
-    \includegraphics[width=1\textwidth]{close_loop_step.png}
-    \caption{Close-loop step response.}
-    \label{fig:close_loop_step}
-\end{minipage}
+    \includegraphics[width=1\textwidth]{close_loop.png}
+    \caption{Close-loop impulse and step system responses}
+    \label{fig:close_loop}
 \end{figure}
-\subsection{Study of system behavior}
+
+\section{Study of System Behavior}
 
 In case Longitudinal dynamic it's possible to measure $\theta$ (pitch
-angle). There is no specific conditions for deflector angle actuator. The
+angle). At this moment, there is no specific conditions for deflector angle actuator. The
 $R = 0.1$ matrix we will keep equal to 0.1. In the following figure
 \ref{fig:diff_Q}, there are impulse responses for 
 different $Q$ matrices. Where we change $x$ parameter from 1 to 500 with 50 as
@@ -229,7 +235,7 @@ $Q = \begin{bmatrix}  0 & 0 & 0 \\
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.6\textwidth]{diff_Q.png}
+    \includegraphics[width=1\textwidth]{lqr_diff_Q.png}
     \caption{Impulse response for different Q matrices.}
     \label{fig:diff_Q}
 \end{figure}
@@ -241,8 +247,40 @@ $Q = \begin{bmatrix}  0 & 0 & 0 \\
                       0 & 0 & 500 \end{bmatrix}$  \
 $R = 0.1$
 
+\section{Acting Value Saturation}
+It's very hard to find some examples of used actuators in aircraft field.
+In this section different saturation values was studied.  However, in this
+section we will try to see how different saturation values affect the
+behavior of the system. Assuming that the elevator deflector $\delta_e$ 
+possible positions are situated in range from 0.5 to 1.5 [rad].
+Figure \ref{fig:sat_diff} present different system responses for different saturation
+values in the range from 0.5 to 1.5 [rad].
 
-\subsection{Observer's proposal}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\textwidth]{lqr_saturation_diff.png}
+    \caption{System response controlled LQR with different saturation values}
+    \label{fig:sat_diff}
+\end{figure}
+
+At this step we will satisfying with fastest saturation value $1.5 \text{rad} \approx 90 ^o$. The system response with saturation 1.5 rad shown in figure \ref{fig:sat}.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\textwidth]{lqr_saturation.png}
+    \caption{System response with input saturation = 1.5 rad}
+    \label{fig:sat}
+\end{figure}
+
+As we can see the aircraft dynamic in longitudinal motion with saturated
+elevator deflection shows a sufficiently slow behavior, which, however,
+corresponds to reality.
+
+
+
+
+
+\section{Kalman Filter Implementation}
 The LQR controller can be used if we have information about the whole
 state $x$. A Kalman filter can be used to reconstruct the state from the
 $y$ measurement. The following system of equations \ref{kf} representing Kalman filter.
@@ -272,9 +310,9 @@ There are more options how to calculate $Kf$ gain. Define $Vd$
 and $Vn$ matrices we can use the same \textbf{lqr} function as follow: 
 
 \begin{lstlisting}[frame=single]
-Vd = .01*eye(3); 
-Vn = 1;
-Kf = (lqr(A',C',Vd,Vn))';
+Sw = .1;
+Sv = 1;
+[kalmf, Kf, P] = kalman(sys_ss, Sw, Sv); 
 \end{lstlisting}
 
 Simulink model of system is presented in the following diagram
@@ -296,7 +334,7 @@ Dkf = 0*[B Kf];
 sys_kf = ss(Akf, Bkf, Ckf, Dkf);
 \end{lstlisting}
 
-\subsection{Study of system behavior with an observer (simulation)}
+\section{Study of system behavior with an observer (simulation)}
 The real system control contain measurement noise and disturbance. In model
 \ref{fig:lqg_noise} were used $w_d$ and $w_n$ disturbance and noise inputs
 as Gaussian white noise.
@@ -340,7 +378,7 @@ permissible noise level.
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.6\textwidth]{lqg_noise_plot.png}
+    \includegraphics[width=1\textwidth]{lqg_saturated_noise.png}
     \caption{LQG regulator output}
     \label{fig:lqg_noise_plot}
 \end{figure}
@@ -349,13 +387,14 @@ With increasing noise amplitude, the model is able to remain functional.
 This can be verified by changing the disturbance and noise magnitude in the
 Simulink model.
 
-\subsection{Evaluation of the whole task and conclusion}
-
-LQG can be used to control the pitch angle of an aircraft. LQG is
-sufficiently resistant to the disturbance and measurement noise.
+\section{Evaluation of the whole task and conclusion}
+The aircraft model used in this task is stable, observable, and
+controllable.  System behavior was studied, and an LQR regulator was added.
+Using Kalman filter as state observer, LQG control was implemented. Using
+saturation on the system's input with noisy measurement, LQG control is
+still correctly working.  LQG can be used to control the pitch angle of an
+aircraft and sufficiently resistant to the measurement noise.
 Implementation in the Matlab/Simulink environment sufficiently clear and
-easily scalable.
+easily salable.
+
 All Simulink models and Matlab scripts are available in appendix.
-
-
-\end{document}

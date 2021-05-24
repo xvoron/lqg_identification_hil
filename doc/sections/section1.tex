@@ -1,11 +1,4 @@
-\documentclass[../report.tex]{subfiles}
-
-\begin{document}
-% -----------------------------------------------------------------------------
-% SECTION 1 
-% -----------------------------------------------------------------------------
-
-\section{Review odborného članku}
+\chapter{Review odborného članku}
 
 Název článku: Aircraft Control System Using LQG and LQR Controller with Optimal
 Estimation-Kalman Filter Design \\
@@ -14,7 +7,7 @@ Odkaz na článek:
 \href{https://www.sciencedirect.com/science/article/pii/S1877705814011771}{www.sciencedirect.com} \\
 \textbf{Seznam Příloh:} aircraft.pdf 
 
-\subsection{Review}
+\section{Review}
 
 Tato práce se zabývá implementaci řízení letadla pomocí metod \textbf{LQG}
 (Linear–Quadratic–Gaussian control) a \textbf{LQR} (Linear–Quadratic regulator) pomocí
@@ -147,7 +140,7 @@ Kálmánův filtr tak aby odhad parametrů byl co nejpřesnější.
 
 Výsledky simulace znázorněny v článku.
 
-\subsection{Krirické zhodnocení}
+\section{Krirické zhodnocení}
 
 Z uvedených výsledku lze konstatovat že řízení LQG je schopné řídit pitch angle,
 roll angle a sideslip angle letadla. Přítomnost Kálmánova filtru zaručuje
@@ -162,5 +155,3 @@ tykající základní informace o dynamice letadla.
 Nicméně následující kapitoly dostatečně přehledné a informativní. Implementace
 diskrétního Kalmana vyžaduje od čtenáře znalost použiti přechodů v Simulinku
 mezi systémem se spojitým časem a diskrétním. Toto lze zrealizovat například blokem Zero-Order-Hold.
-
-\end{document}
